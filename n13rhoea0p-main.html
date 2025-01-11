@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JWT Validator</title>
+  <style>
+    table, th, td {
+      border: 1px solid black;
+    }
+    .invalid {
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>JWT Validator</h1>
+
+  <div id="userName">Anonymous User</div> <form id="jwtForm">
+    <label for="jwtInput">Enter JWT:</label><br>
+    <input type="text" id="jwtInput" name="jwtInput"><br><br>
+    <input type="submit" value="Submit">
+  </form> 
+
+  <br>
+
+  <h2>Submitted Text</h2>
+  <table id="jwtTable">
+    <tr>
+      <th>JWT</th>
+      <th>Timestamp</th>
+    </tr>
+  </table>
+
+  <script>
+    const publicKey = `-----BEGIN PUBLIC KEY-----
+MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEMU1JFVEO9FkVr0r041GpAWzKvQi1TBYm
+arJj3+aNeC2aK9GT7Hct1OJGWQGbUkNWTeUr+Ui09PjBit+AMYuHgA==
+-----END PUBLIC KEY-----`;
+
+    const jwtForm = document.getElementById('jwtForm');
+    const jwtTable = document.getElementById('jwtTable');
+    const userNameDiv = document.getElementById('userName');
+
+    // Retrieve user's name from localStorage
+    const userName = localStorage.getItem('userName') || 'ANON User';
+    userNameDiv.textContent = `Welcome, ${userName}!`;
+
+    jwtForm.addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent default form submission
+
+      const jwtInput = document.getElementById('jwtInput').value;
+      const timestamp = new Date().toLocaleString();
+
+      const row = jwtTable.insertRow(-1);
+      const jwtCell = row.insertCell(0);
+      const timestampCell = row.insertCell(1);
+
+      jwtCell.innerHTML = jwtInput;
+      timestampCell.innerHTML = timestamp;
+
+      // Validate JWT signature
+      try {
+        const decodedJWT = JSON.parse(atob(jwtInput.split('.')[1]));
+        const isValid = KJUR.jws.JWS.verifyJWT(jwtInput, publicKey, { alg: ['ES256'] });
+        if (isValid) {
+          row.classList.add('invalid');
+        }
+      } catch (error) {
+        console.error('Error validating JWT:', error);
+      }
+    });
+  </script>
+  <script src="https://kjur.github.io/jsrsasign/jsrsasign-all-min.js"></script> 
+</body>
+</html>
